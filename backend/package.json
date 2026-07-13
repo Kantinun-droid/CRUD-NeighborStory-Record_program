@@ -1,0 +1,26 @@
+{
+  "name": "neighborstory-backend",
+  "version": "1.0.0",
+  "description": "ระบบบันทึกข้อมูลและเรื่องราวของเพื่อนบ้าน - Backend API",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "lint": "eslint .",
+    "test": "jest --detectOpenHandles"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "sequelize": "^6.37.3",
+    "pg": "^8.11.5",
+    "pg-hstore": "^2.3.4",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "eslint": "^9.5.0",
+    "@eslint/js": "^9.5.0",
+    "jest": "^29.7.0",
+    "supertest": "^7.0.0"
+  }
+}
