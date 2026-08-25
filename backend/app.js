@@ -6,6 +6,8 @@ const express = require('express');
 const cors = require('cors');
 const Neighbor = require('./models/Neighbor');
 const Story = require('./models/Story');
+const authRoutes = require('./routes/auth');
+const profileRoutes = require('./routes/profile');
 
 const app = express();
 
@@ -16,6 +18,12 @@ app.use(express.json());
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', version: '1.0.0' });
 });
+
+// ===================== Auth: /api/auth =====================
+app.use('/api/auth', authRoutes);
+
+// ===================== Profile: /api/profile =====================
+app.use('/api/profile', profileRoutes);
 
 // ===================== CRUD: /api/neighbors =====================
 
