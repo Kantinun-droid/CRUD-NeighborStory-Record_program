@@ -1,0 +1,1 @@
+[![CI - Build and Push to Docker Hub](https://github.com/Kantinun-droid/CRUD-NeighborStory-Record_program/actions/workflows/ci.yml/badge.svg)](https://github.com/Kantinun-droid/CRUD-NeighborStory-Record_program/actions/workflows/ci.yml)
