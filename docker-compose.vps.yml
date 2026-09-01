@@ -1,0 +1,62 @@
+# docker-compose.vps.yml
+# ใช้สำหรับ deploy บน vps01 (shared training server) เท่านั้น
+# แทนที่ <yourname>, <PORT_WEB>, <PORT_API> ด้วยของจริงก่อนใช้งาน
+# - <yourname>: prefix กันชื่อ container/network ชนกับเพื่อนคนอื่นบนเครื่องเดียวกัน
+# - <PORT_WEB>/<PORT_API>: เลือกจากช่วง 30000-30099 ที่ยังไม่มีใครใช้ (เช็คด้วย `docker ps` บน server ก่อน)
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: oiia043-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - oiia043-db-data:/var/lib/postgresql/data
+    networks:
+      - oiia043-net
+    # หมายเหตุ: ไม่ publish พอร์ต 5432 ออก internet เพราะเป็นเครื่องที่ใช้ร่วมกันทั้งชั้น
+    # backend เข้าถึง db ผ่าน network ภายในเท่านั้น (service name "db")
+
+  backend:
+    image: meowxd/neighborstory-api:latest
+    container_name: oiia043-backend
+    restart: unless-stopped
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      PORT: 3001
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN:-15m}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+    ports:
+      - "<PORT_API>:30043:3001"   # ต้องอยู่ในช่วง 30000-30099 และไม่ชนใคร
+    networks:
+      - oiia043-net
+    depends_on:
+      - db
+
+  frontend:
+    image: meowxd/neighborstory-web:latest
+    container_name: oiia043-frontend
+    restart: unless-stopped
+    ports:
+      - "<PORT_WEB>:30044:80"   # ต้องอยู่ในช่วง 30000-30099 และไม่ชนใคร
+    networks:
+      - oiia043-net
+    depends_on:
+      - backend
+
+networks:
+  oiia043-net:
+    name: oiia043-net
+
+volumes:
+  oiia043-db-data:
+    name: oiia043-db-data
