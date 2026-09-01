@@ -54,3 +54,43 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/neighborstory-web:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/neighborstory-web:${{ github.sha }}
+
+  deploy:
+    needs: [build-and-push-backend, build-and-push-frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ก็อปปี้ไฟล์ docker-compose.vps.yml ขึ้นไปวางในโฟลเดอร์ของตัวเองบน vps01
+      - name: Copy docker-compose.vps.yml to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "docker-compose.vps.yml"
+          target: "~/apps/oiia043/"
+          strip_components: 0
+
+      # เขียนไฟล์ .env บน server จาก GitHub Secrets แล้วสั่ง docker compose pull + up
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ~/apps/oiia043
+            mv docker-compose.vps.yml docker-compose.yml
+            cat > .env << 'ENVEOF'
+            DB_NAME=${{ secrets.VPS_DB_NAME }}
+            DB_USER=${{ secrets.VPS_DB_USER }}
+            DB_PASSWORD=${{ secrets.VPS_DB_PASSWORD }}
+            JWT_ACCESS_SECRET=${{ secrets.JWT_ACCESS_SECRET }}
+            JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}
+            ENVEOF
+            docker compose pull
+            docker compose up -d
